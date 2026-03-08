@@ -35,9 +35,9 @@ Options:
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `hark_BUILD_EXAMPLES` | `ON` | Build examples |
-| `hark_BUILD_SHARED` | `OFF` | Shared library instead of static |
-| `hark_ASAN` | `OFF` | AddressSanitizer |
+| `HARK_BUILD_EXAMPLES` | `ON` | Build examples |
+| `HARK_BUILD_SHARED` | `OFF` | Shared library instead of static |
+| `HARK_ASAN` | `OFF` | AddressSanitizer |
 
 ## Install
 
