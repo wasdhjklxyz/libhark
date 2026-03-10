@@ -86,11 +86,10 @@ static void hark__conn_reconnect_tick(hark_timer_t *t, void *ctx) {
   }
 }
 
-HARK_API hark_conn_t *
-hark_conn_create(hark_reactor_t *r, const hark_conn_hooks_t *hooks, void *ctx) {
+HARK_API hark_conn_t *hark_conn_create(hark_reactor_t *r, void *ctx) {
   hark_conn_t *c = NULL;
 
-  if (!r || !hooks) {
+  if (!r) {
     errno = EINVAL;
     return NULL;
   }
@@ -109,7 +108,6 @@ hark_conn_create(hark_reactor_t *r, const hark_conn_hooks_t *hooks, void *ctx) {
   c->reactor = r;
   c->ctx = ctx;
   c->state = HARK_CONN_DISCONNECTED;
-  c->hooks = *hooks;
   c->attempt = 0;
 
   c->backoff_ms.def = HARK_CONN_BACKOFF_DEFAULT_MS;
@@ -214,4 +212,58 @@ HARK_API hark_conn_state_t hark_conn_state(const hark_conn_t *c) {
   if (!c)
     return HARK_CONN_DISCONNECTED;
   return c->state;
+}
+
+HARK_API hark_err_t hark_conn_set_open_hook(hark_conn_t *conn,
+                                            int (*open)(void *ctx, int *fd)) {
+
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.open = open;
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_set_on_connect_hook(hark_conn_t *conn,
+                                                  void (*on_connect)(void *ctx,
+                                                                     int fd)) {
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.on_connect = on_connect;
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_set_on_data_hook(hark_conn_t *conn,
+                                               void (*on_data)(void *ctx,
+                                                               int fd)) {
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.on_data = on_data;
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_set_on_disconnect_hook(
+    hark_conn_t *conn, void (*on_disconnect)(void *ctx, int reason)) {
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.on_disconnect = on_disconnect;
+
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_set_on_reconnect_hook(
+    hark_conn_t *conn,
+    hark_err_t (*on_reconnect)(void *ctx, int attempt, uint64_t *delay_ms)) {
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.on_reconnect = on_reconnect;
+
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_set_close_hook(hark_conn_t *conn,
+                                             void (*close)(void *ctx, int fd)) {
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.close = close;
+  return HARK_OK;
 }

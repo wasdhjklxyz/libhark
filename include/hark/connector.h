@@ -30,12 +30,10 @@ extern "C" {
  * Override with hark_conn_set_backoff().
  *
  * @param r     Reactor to register fds with (must outlive the connector).
- * @param hooks Callback table (struct-copied internally).
  * @param ctx   User data passed to all hooks.
  * @return New connector, or NULL on failure (check @c errno).
  */
-HARK_API hark_conn_t *
-hark_conn_create(hark_reactor_t *r, const hark_conn_hooks_t *hooks, void *ctx);
+HARK_API hark_conn_t *hark_conn_create(hark_reactor_t *r, void *ctx);
 
 /**
  * @brief Configure reconnect backoff.
@@ -103,6 +101,87 @@ HARK_API void hark_conn_destroy(hark_conn_t *c);
  *         if @p c is NULL.
  */
 HARK_API hark_conn_state_t hark_conn_state(const hark_conn_t *c);
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ *
+ * @param c    Connector instance.
+ * @param open See @ref hark_conn_hooks_t::open for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_open_hook(hark_conn_t *c,
+                                            int (*open)(void *ctx, int *fd));
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ *
+ * @param c    Connector instance.
+ * @param open See @ref hark_conn_hooks_t::open for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_on_connect_hook(hark_conn_t *c,
+                                                  void (*on_connect)(void *ctx,
+                                                                     int fd));
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ *
+ * @param c    Connector instance.
+ * @param open See @ref hark_conn_hooks_t::open for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_on_data_hook(hark_conn_t *c,
+                                               void (*on_data)(void *ctx,
+                                                               int fd));
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ *
+ * @param c    Connector instance.
+ * @param open See @ref hark_conn_hooks_t::open for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_on_disconnect_hook(
+    hark_conn_t *c, void (*on_disconnect)(void *ctx, int reason));
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ *
+ * @param c    Connector instance.
+ * @param open See @ref hark_conn_hooks_t::open for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_on_reconnect_hook(
+    hark_conn_t *c,
+    hark_err_t (*on_reconnect)(void *ctx, int attempt, uint64_t *delay_ms));
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ *
+ * @param c    Connector instance.
+ * @param open See @ref hark_conn_hooks_t::open for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_close_hook(hark_conn_t *c,
+                                             void (*close)(void *ctx, int fd));
 
 #ifdef __cplusplus
 }

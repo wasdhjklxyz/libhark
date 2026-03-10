@@ -133,22 +133,20 @@ int main(void) {
   }
   ctx.reactor = r;
 
-  hark_conn_hooks_t hooks = {
-      .open = hook_open,
-      .on_connect = hook_on_connect,
-      .on_data = hook_on_data,
-      .on_disconnect = hook_on_disconnect,
-      .on_reconnect = hook_on_reconnect,
-      .close = hook_close,
-  };
-
-  hark_conn_t *conn = hark_conn_create(r, &hooks, &ctx);
+  hark_conn_t *conn = hark_conn_create(r, &ctx);
   if (!conn) {
     perror("hark_conn_create");
     return 1;
   }
   ctx.conn = conn;
 
+  /** WARN: Unhandled returns */
+  hark_conn_set_open_hook(conn, hook_open);
+  hark_conn_set_on_connect_hook(conn, hook_on_connect);
+  hark_conn_set_on_data_hook(conn, hook_on_data);
+  hark_conn_set_on_disconnect_hook(conn, hook_on_disconnect);
+  hark_conn_set_on_reconnect_hook(conn, hook_on_reconnect);
+  hark_conn_set_close_hook(conn, hook_close);
   hark_conn_set_backoff(conn, 500, 10000, 1);
 
   hark_err_t err = hark_conn_open(conn);
