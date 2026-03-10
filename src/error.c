@@ -16,6 +16,8 @@ HARK_API const char *hark_strerror(hark_err_t err) {
     return "invalid argument";
   case HARK_ERR_STATE:
     return "invalid state for operation";
+  case HARK_ERR_INVAL:
+    return "invalid value obtained";
   }
   return "unknown error";
 }
