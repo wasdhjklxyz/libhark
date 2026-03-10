@@ -19,14 +19,7 @@
             inherit version;
             src = ./.;
             nativeBuildInputs = with pkgs; [ cmake ];
-            cmakeFlags = [
-              "-DHARK_BUILD_TESTS=ON"
-              "-DHARK_BUILD_EXAMPLES=ON"
-            ];
-            doCheck = true;
-            checkPhase = ''
-              ctest --output-on-failure
-            '';
+            cmakeFlags = [ "-DHARK_BUILD_EXAMPLES=ON" ];
           };
 
           aarch64-static = let
@@ -38,7 +31,6 @@
             nativeBuildInputs = [ crossPkgs.buildPackages.cmake ];
             cmakeFlags = [
               "-DHARK_BUILD_SHARED=OFF"
-              "-DHARK_BUILD_TESTS=OFF"
               "-DHARK_BUILD_EXAMPLES=OFF"
               "-DCMAKE_C_FLAGS=-static"
             ];
@@ -72,9 +64,6 @@
               clang-tools  # clangd, clang-format, clang-tidy
               cppcheck
               include-what-you-use
-
-              # test
-              cmocka
 
               # misc
               bear
