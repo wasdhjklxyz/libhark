@@ -19,7 +19,7 @@ set(CMAKE_C_EXTENSIONS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-option(HARK_BUILD_EXAMPLES "Build examples"            ON)
+option(HARK_BUILD_EXAMPLES "Build examples"            OFF)
 option(HARK_BUILD_SHARED   "Build shared library"      OFF)
 option(HARK_ASAN           "Enable AddressSanitizer"   OFF)
 
