@@ -84,6 +84,26 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c);
 HARK_API hark_err_t hark_conn_close(hark_conn_t *c);
 
 /**
+ * @brief Signal an unrecoverable connection failure and schedule reconnect.
+ *
+ * Closes the connection (removes fd from reactor, calls @c close hook) and
+ * arms the reconnect backoff timer. Unlike hark_conn_close(), this does not
+ * reset the backoff state or attempt counter - use this when the failure was
+ * detected from within a callback (e.g. a failed read/write) rather than an
+ * explicit teardown.
+ *
+ * The reconnect cycle proceeds identically to an epoll-detected error:
+ * backoff timer fires → @c on_reconnect → @c open.
+ *
+ * Safe to call from within @c on_read or @c on_write hooks.
+ *
+ * @param c Connector instance.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_BADARG @p c is NULL.
+ */
+HARK_API hark_err_t hark_conn_reset(hark_conn_t *c);
+
+/**
  * @brief Destroy the connector.
  *
  * Calls hark_conn_close() if connected, destroys the reconnect timer,

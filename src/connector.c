@@ -280,3 +280,20 @@ HARK_API hark_reactor_t *hark_conn_reactor(hark_conn_t *c) {
     return NULL;
   return c->reactor;
 }
+
+HARK_API hark_err_t hark_conn_reset(hark_conn_t *c) {
+  hark_err_t err = HARK_OK;
+
+  if (!c)
+    return HARK_ERR_BADARG;
+
+  err = hark_conn_close(c);
+  if (err != HARK_OK)
+    return err;
+
+  err = hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+  if (err != HARK_OK)
+    return err;
+
+  return HARK_OK;
+}
