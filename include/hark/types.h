@@ -73,9 +73,9 @@ typedef enum {
  * or still completing an asynchronous connect.
  */
 typedef enum {
-  HARK_CONN_READY = 0,   /**< fd is connected and ready for I/O. */
-  HARK_CONN_PENDING = 1, /**< Async connect; wait for writability. */
-} hark_conn_open_result_t;
+  HARK_OPEN_READY = 0,   /**< fd is connected and ready for I/O. */
+  HARK_OPEN_PENDING = 1, /**< Async connect; wait for writability. */
+} hark_open_state_t;
 
 /** @brief Opaque reactor handle. */
 typedef struct hark_reactor hark_reactor_t;
@@ -122,9 +122,13 @@ typedef struct {
    * fd is immediately usable, @ref HARK_CONN_PENDING for an async connect
    * (the connector will watch for writability), or @c -1 on failure.
    *
+   * To differentiate between reconnect and first-time connect check conn state
+   * for HARK_CONN_CONNECTING (reconnect) or HARK_CONN_DISCONNECTED
+   * (first-time).
+   *
    * @param ctx User data.
    * @param fd  [out] Receives the new file descriptor.
-   * @return @ref hark_conn_open_result_t on success, @c -1 on failure.
+   * @return @ref hark_open_state_t on success, @c -1 on failure.
    */
   int (*open)(void *ctx, int *fd);
 

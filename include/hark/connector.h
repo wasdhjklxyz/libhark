@@ -65,7 +65,7 @@ HARK_API hark_err_t hark_conn_set_backoff(hark_conn_t *c, uint64_t backoff_ms,
  * @param c Connector instance.
  * @return @ref HARK_OK on success (including deferred reconnect).
  * @retval HARK_ERR_BADARG  @p c is NULL.
- * @retval HARK_ERR_STATE   Not in @ref HARK_CONN_DISCONNECTED state.
+ * @retval HARK_ERR_STATE   In @ref HARK_CONN_CONNECTED state.
  * @retval HARK_ERR_BADARG  No @c open hook configured.
  */
 HARK_API hark_err_t hark_conn_open(hark_conn_t *c);

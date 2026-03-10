@@ -48,13 +48,13 @@ static int hook_open(void *ctx, int *fd) {
   if (ret == 0) {
     /* connected immediately (unlikely for TCP but possible on loopback) */
     *fd = sock;
-    return HARK_CONN_READY;
+    return HARK_OPEN_READY;
   }
 
   if (errno == EINPROGRESS) {
     /* async connect - connector will watch for EPOLLOUT */
     *fd = sock;
-    return HARK_CONN_PENDING;
+    return HARK_OPEN_PENDING;
   }
 
   /* actual error */

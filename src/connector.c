@@ -73,7 +73,7 @@ static void hark__conn_reconnect_tick(hark_timer_t *t, void *ctx) {
     c->backoff_ms.cur = delay; /* user may have overridden */
   }
 
-  hark_conn_open(c);
+  hark_conn_open(c); /** WARN: Unhandled return */
 
   if (c->backoff_ms.exp) {
     c->backoff_ms.cur *= 2;
@@ -138,7 +138,7 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
 
   if (!c)
     return HARK_ERR_BADARG;
-  if (c->state != HARK_CONN_DISCONNECTED)
+  if (c->state == HARK_CONN_CONNECTED)
     return HARK_ERR_STATE;
   if (!c->hooks.open)
     return HARK_ERR_INVAL;
@@ -146,14 +146,13 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
   ret = c->hooks.open(c->ctx, &fd);
 
   if (ret < 0 || fd < 0) {
-    c->state = HARK_CONN_DISCONNECTED;
     hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
     return HARK_OK; /* not an error - reconnect will handle it */
   }
 
   c->fd = fd;
 
-  if (ret == HARK_CONN_PENDING) {
+  if (ret == HARK_OPEN_PENDING) {
     c->state = HARK_CONN_CONNECTING;
     return hark_reactor_add(c->reactor, fd,
                             HARK_EV_WRITE | HARK_EV_ERROR | HARK_EV_HUP,
