@@ -183,6 +183,14 @@ HARK_API hark_err_t hark_conn_set_on_reconnect_hook(
 HARK_API hark_err_t hark_conn_set_close_hook(hark_conn_t *c,
                                              void (*close)(void *ctx, int fd));
 
+/**
+ * @brief Get the reactor associated with @p c.
+ *
+ * @param c Connector instance.
+ * @return Reactor, or NULL if @p c is NULL.
+ */
+HARK_API hark_reactor_t *hark_conn_reactor(hark_conn_t *c);
+
 #ifdef __cplusplus
 }
 #endif

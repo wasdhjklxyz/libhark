@@ -266,3 +266,9 @@ HARK_API hark_err_t hark_conn_set_close_hook(hark_conn_t *conn,
   conn->hooks.close = close;
   return HARK_OK;
 }
+
+HARK_API hark_reactor_t *hark_conn_reactor(hark_conn_t *c) {
+  if (!c)
+    return NULL;
+  return c->reactor;
+}
