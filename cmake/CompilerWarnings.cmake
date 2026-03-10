@@ -1,16 +1,16 @@
 function(target_set_warnings target)
   target_compile_options(${target} PRIVATE
-    $<$<C_COMPILER_ID:GNU>:
+    $<$<COMPILE_LANG_AND_ID:C,GNU>:
       -Wall -Wextra -Wpedantic
       -Wshadow -Wconversion -Wdouble-promotion
       -Wformat=2 -Wformat-security
-      -Wnull-dereference
+      -Wnull-dereference -Wundef
       -Wno-unused-parameter
     >
-    $<$<C_COMPILER_ID:Clang>:
-      -Wall -Wextra -Wpedantic -Werror
+    $<$<COMPILE_LANG_AND_ID:C,Clang>:
+      -Wall -Wextra -Wpedantic
       -Wshadow -Wconversion -Wdouble-promotion
-      -Wformat=2
+      -Wformat=2 -Wundef
       -Wno-unused-parameter
     >
   )

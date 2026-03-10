@@ -22,9 +22,6 @@ target_include_directories(hark
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-find_package(Threads REQUIRED)
-target_link_libraries(hark PRIVATE Threads::Threads)
-
 set_target_properties(hark PROPERTIES
   C_VISIBILITY_PRESET hidden
   POSITION_INDEPENDENT_CODE ON
