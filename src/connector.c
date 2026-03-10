@@ -53,10 +53,11 @@ static void hark__conn_on_event(hark_reactor_t *r, int fd, uint32_t events,
     return;
   }
 
-  if (events & HARK_EV_READ) {
-    if (c->hooks.on_data)
-      c->hooks.on_data(c->ctx, fd);
-  }
+  if ((events & HARK_EV_READ) && c->hooks.on_read)
+    c->hooks.on_read(c->ctx, fd);
+
+  if ((events & HARK_EV_WRITE) && c->hooks.on_write)
+    c->hooks.on_write(c->ctx, fd);
 }
 
 static void hark__conn_reconnect_tick(hark_timer_t *t, void *ctx) {
@@ -231,12 +232,21 @@ HARK_API hark_err_t hark_conn_set_on_connect_hook(hark_conn_t *conn,
   return HARK_OK;
 }
 
-HARK_API hark_err_t hark_conn_set_on_data_hook(hark_conn_t *conn,
-                                               void (*on_data)(void *ctx,
+HARK_API hark_err_t hark_conn_set_on_read_hook(hark_conn_t *conn,
+                                               void (*on_read)(void *ctx,
                                                                int fd)) {
   if (!conn)
     return HARK_ERR_BADARG;
-  conn->hooks.on_data = on_data;
+  conn->hooks.on_read = on_read;
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_set_on_write_hook(hark_conn_t *conn,
+                                                void (*on_write)(void *ctx,
+                                                                 int fd)) {
+  if (!conn)
+    return HARK_ERR_BADARG;
+  conn->hooks.on_write = on_write;
   return HARK_OK;
 }
 
@@ -245,7 +255,6 @@ HARK_API hark_err_t hark_conn_set_on_disconnect_hook(
   if (!conn)
     return HARK_ERR_BADARG;
   conn->hooks.on_disconnect = on_disconnect;
-
   return HARK_OK;
 }
 
@@ -255,7 +264,6 @@ HARK_API hark_err_t hark_conn_set_on_reconnect_hook(
   if (!conn)
     return HARK_ERR_BADARG;
   conn->hooks.on_reconnect = on_reconnect;
-
   return HARK_OK;
 }
 

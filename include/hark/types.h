@@ -152,7 +152,23 @@ typedef struct {
    * @param ctx User data.
    * @param fd  The readable file descriptor.
    */
-  void (*on_data)(void *ctx, int fd);
+  void (*on_read)(void *ctx, int fd);
+
+  /**
+   * @brief fd is ready to write.
+   *
+   * The reactor detected @ref HARK_EV_WRITE on the fd. Write pending data
+   * to @p fd using your protocol framing. The connector never calls write()
+   * itself.
+   *
+   * Only fired when @ref HARK_EV_WRITE is included in the reactor mask.
+   * Use hark_reactor_mod() to add/remove @ref HARK_EV_WRITE dynamically
+   * based on whether you have pending data to send.
+   *
+   * @param ctx User data.
+   * @param fd  The writable file descriptor.
+   */
+  void (*on_write)(void *ctx, int fd);
 
   /**
    * @brief Connection lost.

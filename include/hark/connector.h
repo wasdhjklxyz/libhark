@@ -130,18 +130,40 @@ HARK_API hark_err_t hark_conn_set_on_connect_hook(hark_conn_t *c,
                                                                      int fd));
 
 /**
- * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.
+ * @brief Set the @ref hark_conn_hooks_t::on_read hook on @p c.
  *
- * @param c    Connector instance.
- * @param open See @ref hark_conn_hooks_t::open for contract.
+ * Called when the reactor detects @ref HARK_EV_READ on the connection fd. The
+ * mask must include @ref HARK_EV_READ via hark_reactor_mod() for this hook to
+ * fire.
+ *
+ * @param c       Connector instance.
+ * @param on_read See @ref hark_conn_hooks_t::on_read for contract.
  * @return @ref HARK_OK on success.
- * @retval HARK_ERR_INVAL @p c is NULL or @p open is NULL.
+ * @retval HARK_ERR_BADARG @p c is NULL.
  *
  * @see hark_conn_hooks_t
  */
-HARK_API hark_err_t hark_conn_set_on_data_hook(hark_conn_t *c,
-                                               void (*on_data)(void *ctx,
+HARK_API hark_err_t hark_conn_set_on_read_hook(hark_conn_t *c,
+                                               void (*on_read)(void *ctx,
                                                                int fd));
+
+/**
+ * @brief Set the @ref hark_conn_hooks_t::on_write hook on @p c.
+ *
+ * Called when the reactor detects @ref HARK_EV_WRITE on the connection fd.
+ * The mask must include @ref HARK_EV_WRITE via hark_reactor_mod() for this
+ * hook to fire.
+ *
+ * @param c        Connector instance.
+ * @param on_write See @ref hark_conn_hooks_t::on_write for contract.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_BADARG @p c is NULL.
+ *
+ * @see hark_conn_hooks_t
+ */
+HARK_API hark_err_t hark_conn_set_on_write_hook(hark_conn_t *c,
+                                                void (*on_write)(void *ctx,
+                                                                 int fd));
 
 /**
  * @brief Set the @ref hark_conn_hooks_t::open hook on @p c.

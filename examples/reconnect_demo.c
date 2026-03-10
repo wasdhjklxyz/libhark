@@ -68,7 +68,7 @@ static void hook_on_connect(void *ctx, int fd) {
   printf("[demo] connected on fd=%d\n", fd);
 }
 
-static void hook_on_data(void *ctx, int fd) {
+static void hook_on_read(void *ctx, int fd) {
   uint8_t buf[1024];
   ssize_t n = read(fd, buf, sizeof(buf) - 1);
   if (n > 0) {
@@ -143,7 +143,7 @@ int main(void) {
   /** WARN: Unhandled returns */
   hark_conn_set_open_hook(conn, hook_open);
   hark_conn_set_on_connect_hook(conn, hook_on_connect);
-  hark_conn_set_on_data_hook(conn, hook_on_data);
+  hark_conn_set_on_read_hook(conn, hook_on_read);
   hark_conn_set_on_disconnect_hook(conn, hook_on_disconnect);
   hark_conn_set_on_reconnect_hook(conn, hook_on_reconnect);
   hark_conn_set_close_hook(conn, hook_close);
