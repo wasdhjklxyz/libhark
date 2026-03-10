@@ -67,6 +67,23 @@ static uint32_t hark__map_epoll_events(uint32_t events) {
   return ret;
 }
 
+static hark_err_t hark__drain_wake(int fd) {
+  ssize_t n = 0;
+  uint64_t val = 0;
+
+  if (fd < 0)
+    return HARK_ERR_STATE;
+
+  do {
+    n = read(fd, &val, sizeof(val));
+  } while (n == -1 && errno == EINTR);
+
+  if (n < 0)
+    return HARK_ERR_SYSCALL;
+
+  return HARK_OK;
+}
+
 HARK_API hark_reactor_t *hark_reactor_create(void) {
   hark_reactor_t *r = NULL;
   struct epoll_event ev = {.events = EPOLLIN};
@@ -204,8 +221,8 @@ HARK_API hark_err_t hark_reactor_del(hark_reactor_t *r, int fd) {
 
 HARK_API hark_err_t hark_reactor_run(hark_reactor_t *r) {
   int n = -1, i = 0;
-  uint64_t val = 0;
   uint32_t hark_ev = 0;
+  hark_err_t ret = HARK_OK;
   struct epoll_event *ev = NULL;
   hark__fd_entry_t *entry = NULL;
 
@@ -227,7 +244,10 @@ HARK_API hark_err_t hark_reactor_run(hark_reactor_t *r) {
       ev = &r->events[i];
 
       if (!ev->data.ptr) { /* wakeup fd */
-        (void)read(r->wake_fd, &val, sizeof(val));
+        ret = hark__drain_wake(r->wake_fd);
+        if (ret != HARK_OK) {
+          return ret;
+        }
         continue;
       }
 
