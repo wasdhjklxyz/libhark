@@ -60,6 +60,14 @@ HARK_API hark_err_t hark_sig_add(hark_sig_t *s, int signo);
  */
 HARK_API void hark_sig_destroy(hark_sig_t *s);
 
+/**
+ * @brief Get the reactor associated with @p s.
+ *
+ * @param s Signal instance.
+ * @return Reactor, or NULL if @p s is NULL.
+ */
+HARK_API hark_reactor_t *hark_sig_reactor(hark_sig_t *s);
+
 #ifdef __cplusplus
 }
 #endif

@@ -92,3 +92,9 @@ void hark_sig_destroy(hark_sig_t *s) {
   explicit_bzero(s, sizeof(*s));
   free(s);
 }
+
+HARK_API hark_reactor_t *hark_sig_reactor(hark_sig_t *c) {
+  if (!c)
+    return NULL;
+  return c->reactor;
+}
