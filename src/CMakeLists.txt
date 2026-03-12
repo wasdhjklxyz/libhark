@@ -30,14 +30,14 @@ set_target_properties(hark PROPERTIES
   SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
-include(CompilerWarnings)
-target_set_warnings(hark)
-
-include(Hardening)
-target_set_hardening(hark)
-
-include(Sanitizers)
-target_set_sanitizers(hark)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  include(CompilerWarnings)
+  target_set_warnings(hark)
+  include(Hardening)
+  target_set_hardening(hark)
+  include(Sanitizers)
+  target_set_sanitizers(hark)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS hark
