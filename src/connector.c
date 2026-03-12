@@ -22,6 +22,8 @@ static void hark__conn_on_event(hark_reactor_t *r, int fd, uint32_t events,
   if (c->state == HARK_CONN_CONNECTING) {
     if (events & (HARK_EV_ERROR | HARK_EV_HUP)) {
       hark_reactor_del(r, fd);
+      if (c->hooks.on_disconnect)
+        c->hooks.on_disconnect(c->ctx, errno);
       if (c->hooks.close)
         c->hooks.close(c->ctx, fd);
       c->fd = -1;
@@ -135,11 +137,10 @@ HARK_API hark_err_t hark_conn_set_backoff(hark_conn_t *c, uint64_t backoff_ms,
 HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
   int fd = -1;
   int ret = 0;
-  hark_err_t err = HARK_OK;
 
   if (!c)
     return HARK_ERR_BADARG;
-  if (c->state == HARK_CONN_CONNECTED)
+  if (c->state == HARK_CONN_CONNECTED || c->state == HARK_CONN_READY)
     return HARK_ERR_STATE;
   if (!c->hooks.open)
     return HARK_ERR_INVAL;
@@ -153,6 +154,19 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
 
   c->fd = fd;
 
+  if (ret == HARK_OPEN_READY) {
+    /*
+     * Transport is up but logical connection unconfirmed.
+     * Backoff and attempt NOT reset here - caller must call hark_conn_ready()
+     * once the peer is confirmed alive, which resets backoff and fires
+     * on_connect.
+     */
+    c->state = HARK_CONN_READY;
+    return hark_reactor_add(c->reactor, fd,
+                            HARK_EV_READ | HARK_EV_ERROR | HARK_EV_HUP,
+                            hark__conn_on_event, c);
+  }
+
   if (ret == HARK_OPEN_PENDING) {
     c->state = HARK_CONN_CONNECTING;
     return hark_reactor_add(c->reactor, fd,
@@ -160,20 +174,9 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
                             hark__conn_on_event, c);
   }
 
-  c->state = HARK_CONN_CONNECTED;
-  c->attempt = 0;
-  c->backoff_ms.cur = c->backoff_ms.def;
-
-  err = hark_reactor_add(c->reactor, fd,
-                         HARK_EV_READ | HARK_EV_ERROR | HARK_EV_HUP,
-                         hark__conn_on_event, c);
-  if (err != HARK_OK)
-    return err;
-
-  if (c->hooks.on_connect)
-    c->hooks.on_connect(c->ctx, fd);
-
-  return HARK_OK;
+  /* open hook returned unknown value */
+  hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+  return HARK_ERR_INVAL;
 }
 
 HARK_API hark_err_t hark_conn_close(hark_conn_t *c) {
@@ -300,6 +303,22 @@ HARK_API hark_err_t hark_conn_reset(hark_conn_t *c) {
   err = hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
   if (err != HARK_OK)
     return err;
+
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_conn_ready(hark_conn_t *c) {
+  if (!c)
+    return HARK_ERR_BADARG;
+  if (c->state != HARK_CONN_READY)
+    return HARK_ERR_STATE;
+
+  c->state = HARK_CONN_CONNECTED;
+  c->attempt = 0;
+  c->backoff_ms.cur = c->backoff_ms.def;
+
+  if (c->hooks.on_connect)
+    c->hooks.on_connect(c->ctx, c->fd);
 
   return HARK_OK;
 }

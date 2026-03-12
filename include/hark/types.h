@@ -63,7 +63,8 @@ typedef enum {
 typedef enum {
   HARK_CONN_DISCONNECTED = 0, /**< Not connected. */
   HARK_CONN_CONNECTING = 1,   /**< Async connect in progress. */
-  HARK_CONN_CONNECTED = 2,    /**< Connected and registered with reactor. */
+  HARK_CONN_READY = 2,        /**< Connection ready. */
+  HARK_CONN_CONNECTED = 3,    /**< Connected and registered with reactor. */
 } hark_conn_state_t;
 
 /**

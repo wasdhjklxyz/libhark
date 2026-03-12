@@ -104,6 +104,29 @@ HARK_API hark_err_t hark_conn_close(hark_conn_t *c);
 HARK_API hark_err_t hark_conn_reset(hark_conn_t *c);
 
 /**
+ * @brief Signal that a @ref HARK_OPEN_READY connection is logically ready.
+ *
+ * For protocols where the transport is immediately usable (e.g. UDP) but
+ * logical connectivity must be confirmed out-of-band (e.g. first MAVLink
+ * heartbeat received), @ref HARK_OPEN_READY intentionally defers the backoff
+ * reset and @c on_connect callback. Call this function once the protocol
+ * confirms the remote peer is alive.
+ *
+ * Resets the attempt counter and backoff delay to their initial values, then
+ * calls the @c on_connect hook.
+ *
+ * Has no effect and returns @ref HARK_ERR_STATE if the connector is not in
+ * @ref HARK_CONN_CONNECTED state (e.g. called before @c open or after
+ * disconnect).
+ *
+ * @param c Connector instance.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_BADARG @p c is NULL.
+ * @retval HARK_ERR_STATE  Not in @ref HARK_CONN_CONNECTED state.
+ */
+HARK_API hark_err_t hark_conn_ready(hark_conn_t *c);
+
+/**
  * @brief Destroy the connector.
  *
  * Calls hark_conn_close() if connected, destroys the reconnect timer,
