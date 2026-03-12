@@ -10,6 +10,7 @@ target_sources(hark PRIVATE
   connector.c
   error.c
   reactor.c
+  signal.c
   timer.c
 )
 

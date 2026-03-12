@@ -3,7 +3,7 @@
  * @brief Public types, error codes, event flags, and callback signatures.
  *
  * All public libhark types are defined here. Headers for individual modules
- * (reactor.h, timer.h, connector.h) include this automatically.
+ * (reactor.h, timer.h, connector.h, signal.h) include this automatically.
  */
 
 #ifndef HARK_TYPES_H
@@ -85,6 +85,10 @@ typedef struct hark_timer hark_timer_t;
 
 /** @brief Opaque connector handle. */
 typedef struct hark_conn hark_conn_t;
+
+typedef struct hark_sig hark_sig_t;
+
+typedef void (*hark_sig_fn)(hark_sig_t *s, int signo, void *ctx);
 
 /**
  * @brief Callback for timer events.

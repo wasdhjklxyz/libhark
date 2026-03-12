@@ -1,10 +1,10 @@
 /**
  * @file echo_server.c
- * @brief TCP echo server using hark reactor + timers.
+ * @brief TCP echo server using hark reactor + timers + signal handling.
  *
  * Listens on port 9000, echoes back anything received.
- * A 1-second recurring timer prints stats.
- * Ctrl-C (SIGINT via signalfd) shuts down cleanly.
+ * A 5-second recurring timer prints stats.
+ * Ctrl-C (SIGINT) or SIGTERM shuts down cleanly via hark_sig_t.
  *
  * Usage: ./echo_server
  */
@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/signalfd.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -82,11 +81,11 @@ static void on_stats(hark_timer_t *t, void *ctx) {
          srv->total_bytes);
 }
 
-static void on_signal(hark_reactor_t *r, int fd, uint32_t events, void *ctx) {
-  struct signalfd_siginfo info;
-  (void)read(fd, &info, sizeof(info));
-  printf("\n[echo] caught signal %d, shutting down\n", info.ssi_signo);
-  hark_reactor_stop(r);
+static void on_signal(hark_sig_t *s, int signo, void *ctx) {
+  server_ctx_t *srv = ctx;
+  printf("\n[echo] caught signal %d (%s), shutting down\n", signo,
+         signo == SIGINT ? "SIGINT" : "SIGTERM");
+  hark_reactor_stop(srv->reactor);
 }
 
 int main(void) {
@@ -134,26 +133,21 @@ int main(void) {
     return 1;
   }
 
-  sigset_t mask;
-  sigemptyset(&mask);
-  sigaddset(&mask, SIGINT);
-  sigaddset(&mask, SIGTERM);
-  sigprocmask(SIG_BLOCK, &mask, NULL);
-
-  int sig_fd = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
-  if (sig_fd < 0) {
-    perror("signalfd");
+  hark_sig_t *sig = hark_sig_create(r, on_signal, &srv);
+  if (!sig) {
+    perror("hark_sig_create");
     return 1;
   }
-  hark_reactor_add(r, sig_fd, HARK_EV_READ, on_signal, NULL);
+  hark_sig_add(sig, SIGINT);
+  hark_sig_add(sig, SIGTERM);
 
   hark_err_t err = hark_reactor_run(r);
   if (err != HARK_OK)
     fprintf(stderr, "[echo] reactor exited: %s\n", hark_strerror(err));
 
+  hark_sig_destroy(sig);
   hark_timer_destroy(stats);
   close(listen_fd);
-  close(sig_fd);
   hark_reactor_destroy(r);
 
   printf("[echo] goodbye\n");

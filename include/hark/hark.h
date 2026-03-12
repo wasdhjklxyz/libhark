@@ -9,6 +9,7 @@
 #include <hark/connector.h>
 #include <hark/export.h>
 #include <hark/reactor.h>
+#include <hark/signal.h>
 #include <hark/timer.h>
 #include <hark/types.h>
 #include <hark/version.h>

@@ -8,6 +8,7 @@
 
 #include <hark/types.h>
 
+#include <bits/types/sigset_t.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -65,6 +66,15 @@ struct hark_conn {
     uint64_t max; /**< Upper bound. */
     int exp;      /**< Non-zero for exponential, zero for linear. */
   } backoff_ms;
+};
+
+/** @internal Full signal state. */
+struct hark_sig {
+  int fd;
+  hark_reactor_t *reactor;
+  hark_sig_fn cb;
+  void *ctx;
+  sigset_t mask;
 };
 
 /**
