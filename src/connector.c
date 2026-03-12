@@ -281,6 +281,12 @@ HARK_API hark_reactor_t *hark_conn_reactor(hark_conn_t *c) {
   return c->reactor;
 }
 
+HARK_API int hark_conn_fd(hark_conn_t *c) {
+  if (!c)
+    return -1;
+  return c->fd;
+}
+
 HARK_API hark_err_t hark_conn_reset(hark_conn_t *c) {
   hark_err_t err = HARK_OK;
 

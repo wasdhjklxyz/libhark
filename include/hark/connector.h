@@ -233,6 +233,14 @@ HARK_API hark_err_t hark_conn_set_close_hook(hark_conn_t *c,
  */
 HARK_API hark_reactor_t *hark_conn_reactor(hark_conn_t *c);
 
+/**
+ * @brief Get the fd associated with @p c.
+ *
+ * @param c Connector instance.
+ * @return fd, or -1 if @p c is NULL.
+ */
+HARK_API int hark_conn_fd(hark_conn_t *c);
+
 #ifdef __cplusplus
 }
 #endif
