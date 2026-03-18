@@ -28,7 +28,8 @@ static void hark__conn_on_event(hark_reactor_t *r, int fd, uint32_t events,
         c->hooks.close(c->ctx, fd);
       c->fd = -1;
       c->state = HARK_CONN_DISCONNECTED;
-      hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+      hark_timer_set_interval(c->reconnect_timer, c->backoff_ms.cur);
+      hark_timer_arm(c->reconnect_timer);
       return;
     }
 
@@ -51,7 +52,8 @@ static void hark__conn_on_event(hark_reactor_t *r, int fd, uint32_t events,
       c->hooks.close(c->ctx, fd);
     c->fd = -1;
     c->state = HARK_CONN_DISCONNECTED;
-    hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+    hark_timer_set_interval(c->reconnect_timer, c->backoff_ms.cur);
+    hark_timer_arm(c->reconnect_timer);
     return;
   }
 
@@ -101,7 +103,8 @@ HARK_API hark_conn_t *hark_conn_create(hark_reactor_t *r, void *ctx) {
   if (!c)
     return NULL;
 
-  c->reconnect_timer = hark__timer_alloc(r, hark__conn_reconnect_tick, c, 1);
+  c->reconnect_timer = hark__timer_alloc(r, hark__conn_reconnect_tick, c,
+                                         HARK_CONN_BACKOFF_DEFAULT_MS, 1);
   if (!c->reconnect_timer) {
     free(c);
     return NULL;
@@ -148,7 +151,8 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
   ret = c->hooks.open(c->ctx, &fd);
 
   if (ret < 0 || fd < 0) {
-    hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+    hark_timer_set_interval(c->reconnect_timer, c->backoff_ms.cur);
+    hark_timer_arm(c->reconnect_timer);
     return HARK_OK; /* not an error - reconnect will handle it */
   }
 
@@ -175,7 +179,8 @@ HARK_API hark_err_t hark_conn_open(hark_conn_t *c) {
   }
 
   /* open hook returned unknown value */
-  hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+  hark_timer_set_interval(c->reconnect_timer, c->backoff_ms.cur);
+  hark_timer_arm(c->reconnect_timer);
   return HARK_ERR_INVAL;
 }
 
@@ -183,7 +188,7 @@ HARK_API hark_err_t hark_conn_close(hark_conn_t *c) {
   if (!c)
     return HARK_ERR_BADARG;
 
-  hark_timer_cancel(c->reconnect_timer);
+  hark_timer_disarm(c->reconnect_timer);
 
   if (c->fd >= 0) {
     hark_reactor_del(c->reactor, c->fd);
@@ -300,7 +305,11 @@ HARK_API hark_err_t hark_conn_reset(hark_conn_t *c) {
   if (err != HARK_OK)
     return err;
 
-  err = hark_timer_set(c->reconnect_timer, c->backoff_ms.cur);
+  err = hark_timer_set_interval(c->reconnect_timer, c->backoff_ms.cur);
+  if (err != HARK_OK)
+    return err;
+
+  err = hark_timer_arm(c->reconnect_timer);
   if (err != HARK_OK)
     return err;
 
