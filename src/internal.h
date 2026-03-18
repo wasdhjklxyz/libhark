@@ -87,6 +87,6 @@ void hark__timer_handler(hark_reactor_t *r, int fd, uint32_t events, void *ctx);
  * Used by the connector to pre-allocate a disarmed reconnect timer.
  */
 hark_timer_t *hark__timer_alloc(hark_reactor_t *r, hark_timer_fn cb, void *ctx,
-                                int oneshot);
+                                uint64_t ms, int oneshot);
 
 #endif /* HARK_INTERNAL_H */

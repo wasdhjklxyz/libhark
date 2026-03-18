@@ -1,7 +1,9 @@
 #include <hark/reactor.h>
 #include <hark/timer.h>
+#include <hark/types.h>
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/timerfd.h>
@@ -10,48 +12,29 @@
 
 #include "internal.h" /* IWYU pragma: keep */
 
-static hark_timer_t *hark__timer_init(hark_reactor_t *r, uint64_t interval_ms,
-                                      hark_timer_fn cb, void *ctx,
-                                      int oneshot) {
-  hark_timer_t *t = NULL;
-
-  if (interval_ms == 0) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  t = hark__timer_alloc(r, cb, ctx, oneshot);
-  if (!t)
-    return NULL;
-
-  if (hark_timer_set(t, interval_ms) != HARK_OK) {
-    hark_timer_destroy(t);
-    return NULL;
-  }
-
-  return t;
-}
-
 void hark__timer_handler(hark_reactor_t *r, int fd, uint32_t events,
                          void *ctx) {
   hark_timer_t *t = ctx;
   uint64_t expirations;
 
+  (void)r;
+  (void)events;
+
   if (read(fd, &expirations, sizeof(expirations)) < 0)
     return; /* EAGAIN or error, either way nothing to do */
 
   if (t->oneshot)
-    t->interval_ms = 0; /* mark disarmed, timerfd already stopped */
+    hark_timer_disarm(t);
 
   if (t->cb)
     t->cb(t, t->ctx);
 }
 
 hark_timer_t *hark__timer_alloc(hark_reactor_t *r, hark_timer_fn cb, void *ctx,
-                                int oneshot) {
+                                uint64_t ms, int oneshot) {
   hark_timer_t *t = NULL;
 
-  if (!r || !cb) {
+  if (!r || !cb || ms == 0) {
     errno = EINVAL;
     return NULL;
   }
@@ -70,9 +53,8 @@ hark_timer_t *hark__timer_alloc(hark_reactor_t *r, hark_timer_fn cb, void *ctx,
   t->cb = cb;
   t->ctx = ctx;
   t->oneshot = oneshot;
-  t->interval_ms = 0; /* disarmed */
+  t->interval_ms = ms;
 
-  /* register with reactor - it won't fire until armed */
   if (hark_reactor_add(r, t->timer_fd, HARK_EV_READ, hark__timer_handler, t) !=
       HARK_OK) {
     int saved = errno;
@@ -88,36 +70,37 @@ hark_timer_t *hark__timer_alloc(hark_reactor_t *r, hark_timer_fn cb, void *ctx,
 HARK_API hark_timer_t *hark_timer_create(hark_reactor_t *r,
                                          uint64_t interval_ms, hark_timer_fn cb,
                                          void *ctx) {
-  return hark__timer_init(r, interval_ms, cb, ctx, 0);
+  return hark__timer_alloc(r, cb, ctx, interval_ms, false);
 }
 
 HARK_API hark_timer_t *hark_timer_oneshot(hark_reactor_t *r,
                                           uint64_t interval_ms,
                                           hark_timer_fn cb, void *ctx) {
-  return hark__timer_init(r, interval_ms, cb, ctx, 1);
+  return hark__timer_alloc(r, cb, ctx, interval_ms, true);
 }
 
-HARK_API hark_err_t hark_timer_set(hark_timer_t *t, uint64_t interval_ms) {
+HARK_API hark_err_t hark_timer_arm(hark_timer_t *t) {
   struct itimerspec ts = {0};
-  if (!t || interval_ms == 0)
+
+  if (!t)
     return HARK_ERR_BADARG;
 
-  ts.it_value.tv_sec = (time_t)(interval_ms / 1000);
-  ts.it_value.tv_nsec = (long)((interval_ms % 1000) * 1000000);
+  if (t->interval_ms == 0)
+    return HARK_ERR_INVAL;
 
-  if (!t->oneshot) {
+  ts.it_value.tv_sec = (time_t)(t->interval_ms / 1000);
+  ts.it_value.tv_nsec = (time_t)((t->interval_ms % 1000) * 1000000);
+
+  if (!t->oneshot)
     ts.it_interval = ts.it_value;
-  }
-  /* else it_interval stays {0,0} - fires once */
 
   if (timerfd_settime(t->timer_fd, 0, &ts, NULL) == -1)
     return HARK_ERR_SYSCALL;
 
-  t->interval_ms = interval_ms;
   return HARK_OK;
 }
 
-HARK_API hark_err_t hark_timer_cancel(hark_timer_t *t) {
+HARK_API hark_err_t hark_timer_disarm(hark_timer_t *t) {
   struct itimerspec ts = {0};
 
   if (!t)
@@ -126,7 +109,15 @@ HARK_API hark_err_t hark_timer_cancel(hark_timer_t *t) {
   if (timerfd_settime(t->timer_fd, 0, &ts, NULL) == -1)
     return HARK_ERR_SYSCALL;
 
-  t->interval_ms = 0;
+  return HARK_OK;
+}
+
+HARK_API hark_err_t hark_timer_set_interval(hark_timer_t *t,
+                                            uint64_t interval_ms) {
+  if (!t || interval_ms == 0)
+    return HARK_ERR_BADARG;
+
+  t->interval_ms = interval_ms;
   return HARK_OK;
 }
 
