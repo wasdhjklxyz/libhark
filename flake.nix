@@ -69,6 +69,7 @@
               bear
               man-pages
               man-pages-posix
+              doxygen
             ];
 
             inputsFrom = [ self.packages.${system}.default ];
