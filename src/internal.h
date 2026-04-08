@@ -8,8 +8,8 @@
 
 #include <hark/types.h>
 
-#include <bits/types/sigset_t.h>
 #include <pthread.h>
+#include <signal.h> // IWYU pragma: keep
 #include <stdatomic.h>
 #include <stdint.h>
 
