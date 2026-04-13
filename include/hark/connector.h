@@ -278,6 +278,16 @@ HARK_API int hark_conn_fd(hark_conn_t *c);
  */
 HARK_API hark_err_t hark_conn_adopt(hark_conn_t *c, int fd);
 
+/**
+ * @brief Set the context of @c.
+ *
+ * @param c   Connector instance.
+ * @param ctx User data passed to all hooks.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_BADARG @p c is NULL.
+ */
+HARK_API hark_err_t hark_conn_set_ctx(hark_conn_t *c, void *ctx);
+
 #ifdef __cplusplus
 }
 #endif

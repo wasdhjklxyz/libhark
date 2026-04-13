@@ -358,3 +358,10 @@ HARK_API hark_err_t hark_conn_adopt(hark_conn_t *c, int fd) {
 
   return HARK_OK;
 }
+
+HARK_API hark_err_t hark_conn_set_ctx(hark_conn_t *c, void *ctx) {
+  if (!c)
+    return HARK_ERR_BADARG;
+  c->ctx = ctx;
+  return HARK_OK;
+}
