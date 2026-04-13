@@ -331,3 +331,30 @@ HARK_API hark_err_t hark_conn_ready(hark_conn_t *c) {
 
   return HARK_OK;
 }
+
+HARK_API hark_err_t hark_conn_adopt(hark_conn_t *c, int fd) {
+  hark_err_t err;
+
+  if (!c)
+    return HARK_ERR_BADARG;
+  if (fd < 0)
+    return HARK_ERR_BADARG;
+  if (c->state != HARK_CONN_DISCONNECTED)
+    return HARK_ERR_STATE;
+
+  err = hark_reactor_add(c->reactor, fd,
+                         HARK_EV_READ | HARK_EV_ERROR | HARK_EV_HUP,
+                         hark__conn_on_event, c);
+  if (err != HARK_OK)
+    return err;
+
+  c->fd = fd;
+  c->state = HARK_CONN_CONNECTED;
+  c->attempt = 0;
+  c->backoff_ms.cur = c->backoff_ms.def;
+
+  if (c->hooks.on_connect)
+    c->hooks.on_connect(c->ctx, fd);
+
+  return HARK_OK;
+}

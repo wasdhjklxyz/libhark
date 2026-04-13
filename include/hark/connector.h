@@ -264,6 +264,20 @@ HARK_API hark_reactor_t *hark_conn_reactor(hark_conn_t *c);
  */
 HARK_API int hark_conn_fd(hark_conn_t *c);
 
+/**
+ * @brief Adopt an existing fd, bypassing the @c open hook.
+ *
+ * Registers @p fd on the reactor and transitions to
+ * @ref HARK_CONN_CONNECTED. Resets backoff and calls @c on_connect.
+ *
+ * @param c  Connector instance.
+ * @param fd File descriptor to adopt.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_BADARG @p c is NULL or @p fd < 0.
+ * @retval HARK_ERR_STATE  Not in @ref HARK_CONN_DISCONNECTED state.
+ */
+HARK_API hark_err_t hark_conn_adopt(hark_conn_t *c, int fd);
+
 #ifdef __cplusplus
 }
 #endif
