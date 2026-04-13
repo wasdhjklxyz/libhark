@@ -365,3 +365,9 @@ HARK_API hark_err_t hark_conn_set_ctx(hark_conn_t *c, void *ctx) {
   c->ctx = ctx;
   return HARK_OK;
 }
+
+HARK_API hark_err_t hark_conn_set_ev(hark_conn_t *c, hark_events_t ev) {
+  if (!c)
+    return HARK_ERR_BADARG;
+  return hark_reactor_mod(c->reactor, c->fd, ev);
+}

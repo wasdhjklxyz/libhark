@@ -288,6 +288,18 @@ HARK_API hark_err_t hark_conn_adopt(hark_conn_t *c, int fd);
  */
 HARK_API hark_err_t hark_conn_set_ctx(hark_conn_t *c, void *ctx);
 
+/**
+ * @brief Modify watched events for @c.
+ *
+ * @param c  Connector isntance.
+ * @param ev New bitmask of @ref hark_events_t.
+ * @return @ref HARK_OK on success.
+ * @retval HARK_ERR_BADARG  @p c is NULL.
+ * @retval HARK_ERR_BADFD   @p c fd is not valid.
+ * @retval HARK_ERR_SYSCALL epoll_ctl() failed; check @c errno.
+ */
+HARK_API hark_err_t hark_conn_set_ev(hark_conn_t *c, hark_events_t ev);
+
 #ifdef __cplusplus
 }
 #endif
